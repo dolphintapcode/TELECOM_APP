@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:telecom_app/views/ExchangePoint/exchange_page.dart';
 import 'package:telecom_app/views/home/buy_package_page.dart';
 import 'package:telecom_app/views/home/home_banner.dart';
+import 'package:telecom_app/views/home/menu_page.dart';
 import 'package:telecom_app/views/home/package_model.dart';
 import 'package:telecom_app/views/home/package_provider.dart';
 import 'package:telecom_app/views/notifications/notification_page.dart';
@@ -31,7 +32,7 @@ class HomePage extends StatelessWidget {
           _buildHomeContent(context, packageVM), // Index 0: Trang chủ
           const HistoryPage(), // Index 1: Lịch sử
           const ExchangePage(), // Index 2
-          const Center(child: Text("Menu")), // Index 3
+          const MenuPage(), // Index 3
         ],
       ),
 
