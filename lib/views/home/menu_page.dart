@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:telecom_app/navigation/app_router.dart';
+import 'package:telecom_app/views/home/privacy_policy_page.dart';
 import 'package:telecom_app/views/home/support_page.dart';
 import 'package:telecom_app/views/home/terms_page.dart';
 
@@ -27,21 +28,11 @@ class MenuPage extends StatelessWidget {
         children: [
           _buildProfileCard(),
           const SizedBox(height: 20),
-          _MenuTile(
-            icon: Icons.support_agent_outlined,
-            title: 'Hỗ trợ',
-            subtitle: 'Trung tâm trợ giúp và liên hệ',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SupportPage()),
-              );
-            },
-          ),
+          const _MenuSectionLabel('Điều khoản & chính sách'),
           _MenuTile(
             icon: Icons.description_outlined,
-            title: 'Điều khoản sử dụng',
-            subtitle: 'Chính sách và quy định dịch vụ',
+            title: 'Điều khoản sử dụng ứng dụng DataOn',
+            subtitle: 'Thông tin điều khoản khi sử dụng ứng dụng',
             onTap: () {
               Navigator.push(
                 context,
@@ -49,6 +40,32 @@ class MenuPage extends StatelessWidget {
               );
             },
           ),
+          _MenuTile(
+            icon: Icons.privacy_tip_outlined,
+            title: 'Chính sách bảo vệ dữ liệu cá nhân',
+            subtitle: 'Cách ứng dụng thu thập và sử dụng dữ liệu',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PrivacyPolicyPage()),
+              );
+            },
+          ),
+          const SizedBox(height: 10),
+          const _MenuSectionLabel('Hỗ trợ'),
+          _MenuTile(
+            icon: Icons.support_agent_outlined,
+            title: 'Trung tâm hỗ trợ',
+            subtitle: 'Câu hỏi thường gặp và thông tin liên hệ',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SupportPage()),
+              );
+            },
+          ),
+          const SizedBox(height: 10),
+          const _MenuSectionLabel('Khác'),
           _MenuTile(
             icon: Icons.info_outline,
             title: 'Phiên bản ứng dụng',
@@ -154,6 +171,27 @@ class MenuPage extends StatelessWidget {
         (route) => false,
       );
     }
+  }
+}
+
+class _MenuSectionLabel extends StatelessWidget {
+  const _MenuSectionLabel(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 10),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          color: Colors.black54,
+        ),
+      ),
+    );
   }
 }
 
