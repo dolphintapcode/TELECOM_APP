@@ -1,13 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../navigation/app_router.dart';
+// 🎯 Import AuthProvider và UserModel của ông
+import 'package:telecom_app/views/auth/auth_provider.dart';
 
 class OtpProvider extends ChangeNotifier {
   bool isLoading = false;
-  int resendSeconds = 60; // Bộ đếm ngược 60 giây
+  int resendSeconds = 60;
   Timer? _timer;
 
-  // Khởi tạo bộ đếm ngược ngay khi vào trang
   void startResendTimer() {
     resendSeconds = 60;
     _timer?.cancel();
@@ -21,68 +23,89 @@ class OtpProvider extends ChangeNotifier {
     });
   }
 
-  // Logic xác thực OTP
+  // 🎯 CẬP NHẬT LOGIC XÁC THỰC OTP
   Future<void> verifyOtp(
     BuildContext context,
     String pin, {
-    bool isRegister = false, // Cờ nhận diện luồng
+    required String phoneNumber, // Nhận SĐT từ arguments
+    String? displayName, // Nhận Tên từ arguments (nếu có)
+    bool isRegister = false,
   }) async {
     isLoading = true;
     notifyListeners();
-    final currentContext = context;
+
+    // 🎯 GIẢ LẬP NHẬP ĐÚNG MÃ (Tí nữa ông tích hợp Firebase Phone Auth thật sau nhé)
+    final authProvider = context.read<AuthProvider>();
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    final isContextMounted = context.mounted;
     await Future.delayed(const Duration(milliseconds: 1000));
 
     if (pin == "123456") {
-      isLoading = false;
-      notifyListeners();
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      }
-
-      // KIỂM TRA LUỒNG ĐỂ ĐIỀU HƯỚNG ĐÚNG FIGMA
       if (isRegister) {
-        // LUỒNG ĐĂNG KÝ: Hiện thông báo và quay về Login để người dùng đăng nhập lại
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Đăng ký thành công! Hãy đăng nhập để bắt đầu."),
-            backgroundColor: Colors.green,
-          ),
+        // --- LUỒNG ĐĂNG KÝ: LƯU VÀO FIREBASE ---
+        bool success = await authProvider.registerUser(
+          name: displayName ?? "Người dùng",
+          phone: phoneNumber,
+          uid:
+              "UID_${DateTime.now().millisecondsSinceEpoch}", // Tạm thời tạo UID giả
         );
 
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          AppRouter.login, // Quay về Login
-          (route) => false,
-        );
+        isLoading = false;
+        notifyListeners();
+
+        if (success && isContextMounted) {
+          messenger.showSnackBar(
+            const SnackBar(
+              content: Text("Đăng ký thành công! Hãy đăng nhập."),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          navigator.pushNamedAndRemoveUntil(AppRouter.login, (route) => false);
+        } else if (isContextMounted) {
+          messenger.showSnackBar(
+            const SnackBar(
+              content: Text("Lỗi lưu dữ liệu. Thử lại sau!"),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 2),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       } else {
-        // LUỒNG ĐĂNG NHẬP: Vào thẳng trang Home
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          AppRouter.home, // Vào Home
-          (route) => false,
-        );
+        // --- LUỒNG ĐĂNG NHẬP: LẤY DỮ LIỆU USER VỀ ---
+        bool success = await authProvider.loginUser(phone: phoneNumber);
+
+        isLoading = false;
+        notifyListeners();
+
+        if (success && isContextMounted) {
+          navigator.pushNamedAndRemoveUntil(AppRouter.home, (route) => false);
+        } else if (isContextMounted) {
+          messenger.showSnackBar(
+            const SnackBar(
+              content: Text("Đăng nhập thất bại. Vui lòng thử lại."),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 2),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
-    } else {
+    } else if (isContextMounted) {
       isLoading = false;
       notifyListeners();
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         const SnackBar(
           content: Text("Mã OTP không đúng"),
           backgroundColor: Colors.red,
+          duration: Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
         ),
       );
     }
-  }
-
-  void _showSnackBar(BuildContext context, String msg, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        backgroundColor: color,
-        duration: const Duration(seconds: 2),
-      ),
-    );
   }
 
   @override

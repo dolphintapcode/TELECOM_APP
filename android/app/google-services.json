@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "34181212925",
+    "project_id": "telecom-app-745d8",
+    "storage_bucket": "telecom-app-745d8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:34181212925:android:e92c78e97d6606ca8c2c94",
+        "android_client_info": {
+          "package_name": "com.example.dataon_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCDqWBlZ9tjJBwKyWo38t59f0L6O2HkHUw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -32,7 +32,7 @@ class PolicyArticlePage extends StatelessWidget {
       body: ListView.separated(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         itemCount: sections.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 20),
+        separatorBuilder: (_, _) => const SizedBox(height: 20),
         itemBuilder: (context, index) {
           final section = sections[index];
           return _ArticleSection(section: section);

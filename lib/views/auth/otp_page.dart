@@ -8,10 +8,13 @@ import 'otp_provider.dart';
 class OtpPage extends StatefulWidget {
   final String phoneNumber;
   final bool isRegister;
+  final String? displayName; // 🎯 Thêm biến này để nhận tên từ màn Register
+
   const OtpPage({
     super.key,
     required this.phoneNumber,
     this.isRegister = false,
+    this.displayName, // Nhận tên người dùng
   });
 
   @override
@@ -20,10 +23,10 @@ class OtpPage extends StatefulWidget {
 
 class _OtpPageState extends State<OtpPage> {
   final pinController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
-    // Bắt đầu đếm ngược ngay khi vào trang
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<OtpProvider>().startResendTimer();
     });
@@ -33,7 +36,6 @@ class _OtpPageState extends State<OtpPage> {
   Widget build(BuildContext context) {
     final otpVM = context.watch<OtpProvider>();
 
-    // Cấu hình Theme cho Pinput
     final defaultPinTheme = PinTheme(
       width: 56,
       height: 56,
@@ -98,14 +100,21 @@ class _OtpPageState extends State<OtpPage> {
 
               Pinput(
                 length: 6,
-                controller: pinController, // Thêm controller
+                controller: pinController,
                 autofocus: true,
                 defaultPinTheme: defaultPinTheme,
                 focusedPinTheme: focusedPinTheme,
-                // Nếu là Đăng nhập (isRegister = false) thì nhập xong tự verify luôn
+                // Tự động cập nhật nút bấm khi nhập liệu
+                onChanged: (pin) => setState(() {}),
                 onCompleted: (pin) {
+                  // 🎯 LUỒNG ĐĂNG NHẬP: Tự động xác thực khi đủ 6 số
                   if (!widget.isRegister) {
-                    otpVM.verifyOtp(context, pin, isRegister: false);
+                    otpVM.verifyOtp(
+                      context,
+                      pin,
+                      phoneNumber: widget.phoneNumber,
+                      isRegister: false,
+                    );
                   }
                 },
               ),
@@ -116,17 +125,21 @@ class _OtpPageState extends State<OtpPage> {
 
               const Spacer(),
 
-              // 2. HIỂN THỊ NÚT "HOÀN TẤT ĐĂNG KÝ" NẾU LÀ LUỒNG ĐĂNG KÝ
+              // 🎯 NÚT HOÀN TẤT ĐĂNG KÝ
               if (widget.isRegister)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 20),
                   child: CustomButton(
                     text: 'HOÀN TẤT ĐĂNG KÝ',
-                    // Nút chỉ sáng khi đã nhập đủ 6 số
-                    onPressed: pinController.text.length == 6
+                    // Nút sáng lên khi đã nhập đủ 6 số
+                    onPressed:
+                        pinController.text.length == 6 && !otpVM.isLoading
                         ? () => otpVM.verifyOtp(
                             context,
                             pinController.text,
+                            phoneNumber: widget.phoneNumber,
+                            displayName: widget
+                                .displayName, // 🎯 Truyền tên để lưu Firebase
                             isRegister: true,
                           )
                         : null,
@@ -164,5 +177,11 @@ class _OtpPageState extends State<OtpPage> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    pinController.dispose();
+    super.dispose();
   }
 }

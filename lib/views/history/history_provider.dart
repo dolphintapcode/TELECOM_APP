@@ -25,9 +25,25 @@ class HistoryProvider extends ChangeNotifier {
   List<PackageModel> get activePackages => _activePackages;
   List<PackageModel> get expiredPackages => _expiredPackages;
 
-  // Hàm thêm gói mới khi bấm đăng ký
+  // Hàm thêm gói mới khi bấm đăng ký hoặc đăng ký lại gói đã hết hạn
   void addPackageToHistory(PackageModel package) {
-    _activePackages.insert(0, package);
+    // Nếu gói đã có trong danh sách hết hạn, loại bỏ nó trước
+    _expiredPackages.removeWhere((item) => item.title == package.title);
+
+    // Nếu gói đang dùng đã tồn tại, cập nhật lại vị trí lên đầu
+    _activePackages.removeWhere((item) => item.title == package.title);
+
+    _activePackages.insert(
+      0,
+      PackageModel(
+        title: package.title,
+        price: package.price,
+        image: package.image,
+        description: package.description,
+        duration: package.duration,
+        apps: package.apps,
+      ),
+    );
     notifyListeners();
   }
 }

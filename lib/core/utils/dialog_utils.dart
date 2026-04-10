@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:telecom_app/navigation/app_router.dart';
-import 'package:telecom_app/views/ExchangePoint/exchange_provider.dart';
+import 'package:telecom_app/views/auth/auth_provider.dart';
 import 'package:telecom_app/views/history/history_provider.dart';
 import 'package:telecom_app/views/home/package_model.dart';
 
@@ -118,8 +118,8 @@ class DialogUtils {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: () {
-                        _handleConfirm(
+                      onPressed: () async {
+                        await _handleConfirm(
                           context,
                           ctx,
                           package,
@@ -146,25 +146,30 @@ class DialogUtils {
   }
 
   // 🎯 3. XỬ LÝ LOGIC KHI BẤM NÚT XÁC NHẬN
-  static void _handleConfirm(
+  static Future<void> _handleConfirm(
     BuildContext context,
     BuildContext dialogCtx,
     PackageModel package,
     TransactionType type,
     String? recipientPhone,
-  ) {
+  ) async {
     bool isSuccess = true;
+    final authProvider = context.read<AuthProvider>();
+    final historyProvider = context.read<HistoryProvider>();
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
 
     // A. Nếu là Đổi điểm -> Call hàm trừ điểm trước
     if (type == TransactionType.exchange) {
       final pointsNeeded =
           int.tryParse(package.price.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
-      final exchangeVM = context.read<ExchangeProvider>();
-      isSuccess = exchangeVM.exchangePackage(pointsNeeded);
+      isSuccess = await authProvider.exchangePoints(pointsNeeded);
 
       if (!isSuccess) {
-        Navigator.pop(dialogCtx);
-        ScaffoldMessenger.of(context).showSnackBar(
+        if (dialogCtx.mounted) {
+          navigator.pop();
+        }
+        messenger.showSnackBar(
           const SnackBar(
             content: Text("Rất tiếc, bạn không đủ điểm!"),
             backgroundColor: Colors.red,
@@ -178,14 +183,15 @@ class DialogUtils {
     if (isSuccess) {
       // Tặng bạn bè thì không lưu vào kho Lịch sử (Kho "Đang dùng") của mình
       if (type != TransactionType.gift) {
-        context.read<HistoryProvider>().addPackageToHistory(package);
+        historyProvider.addPackageToHistory(package);
       }
 
-      Navigator.pop(dialogCtx); // Đóng popup
+      if (dialogCtx.mounted) {
+        navigator.pop(); // Đóng popup
+      }
 
       // C. Chuyển sang màn Success với cờ tương ứng
-      Navigator.pushNamed(
-        context,
+      navigator.pushNamed(
         AppRouter.success,
         arguments: {
           'package': package,

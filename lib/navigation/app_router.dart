@@ -44,13 +44,17 @@ class AppRouter {
             builder: (_) => OtpPage(
               phoneNumber: args['phoneNumber'] ?? "",
               isRegister: args['isRegister'] ?? false,
+              // 🎯 THÊM DÒNG NÀY: Để nhận tên từ màn Register truyền sang
+              displayName: args['displayName'],
             ),
           );
         } else {
+          // Trường hợp này thường là từ màn Login (chỉ truyền mỗi String SĐT)
           return MaterialPageRoute(
             builder: (_) => OtpPage(
               phoneNumber: settings.arguments as String,
               isRegister: false,
+              displayName: null,
             ),
           );
         }

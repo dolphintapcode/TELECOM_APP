@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import 'package:telecom_app/gen/assets.gen.dart';
-import 'package:telecom_app/views/ExchangePoint/exchange_provider.dart';
+import 'package:telecom_app/views/auth/auth_provider.dart';
 import 'package:telecom_app/views/home/package_model.dart';
 import 'package:telecom_app/views/home/package_provider.dart';
 import 'package:telecom_app/views/widgets/package_card.dart';
@@ -53,7 +53,14 @@ class ExchangePage extends StatelessWidget {
 
   // --- THẺ ĐIỂM ---
   Widget _buildCustomPointsCard(BuildContext context) {
-    final exchangeVM = context.watch<ExchangeProvider>();
+    final authVM = context.watch<AuthProvider>();
+    final user = authVM.currentUser;
+    final userName = (user?.name ?? 'Khách hàng').toUpperCase();
+    final points = user?.points ?? 0;
+    final formattedPoints = points.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]},',
+    );
 
     return Container(
       width: double.infinity,
@@ -104,7 +111,7 @@ class ExchangePage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  exchangeVM.userName.toUpperCase(),
+                  userName,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 13,
@@ -114,7 +121,7 @@ class ExchangePage extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  exchangeVM.formattedPoints,
+                  formattedPoints,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 38,

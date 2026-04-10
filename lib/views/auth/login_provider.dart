@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // 🎯 Cần thêm dòng này để gọi Provider
 import '../../../navigation/app_router.dart';
+import 'package:telecom_app/views/auth/auth_provider.dart';
 
 class LoginProvider extends ChangeNotifier {
   final TextEditingController phoneController = TextEditingController();
@@ -24,50 +26,54 @@ class LoginProvider extends ChangeNotifier {
       return;
     }
 
-    // Bắt đầu quá trình gửi mã
+    // Bắt đầu quá trình load
     isLoading = true;
     errorText = null;
     notifyListeners();
 
-    // 1. Ẩn bàn phím
+    // 1. Ẩn bàn phím & dọn dẹp thông báo cũ
     FocusScope.of(context).unfocus();
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-    Future<void> handleContinue(BuildContext context) async {
-      // ... check logic ...
+    // 🎯 2. KẾT NỐI FIREBASE: Gọi AuthProvider để kiểm tra SĐT
+    final authProvider = context.read<AuthProvider>();
+    bool isExist = await authProvider.checkPhoneExists(phoneNumber);
 
-      // 1. Dọn dẹp các SnackBar cũ nếu có
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-      // 2. Hiện thông báo với thời gian ngắn (ví dụ 1 giây)
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Đang gửi mã xác thực...'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 1), // Chỉ hiện 1 giây thôi
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-
-      await Future.delayed(const Duration(milliseconds: 1000));
-
-      if (!context.mounted) return;
-      Navigator.pushNamed(context, AppRouter.otp, arguments: phoneNumber);
-    }
-
-    // 3. Giả lập gọi API (1.5 giây)
-    await Future.delayed(const Duration(milliseconds: 1500));
-
+    // Dừng vòng xoay load
     isLoading = false;
     notifyListeners();
 
     if (!context.mounted) return;
 
-    // 4. Chuyển trang dùng Named Route (Đã định nghĩa trong AppRouter)
-    Navigator.pushNamed(
-      context,
-      AppRouter.otp,
-      arguments: phoneNumber, // Truyền số điện thoại sang OTP
-    );
+    // 🎯 3. XỬ LÝ LOGIC ĐIẾU HƯỚNG
+    if (isExist) {
+      // TRƯỜNG HỢP 1: SĐT ĐÃ CÓ TRONG DATABASE
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đang gửi mã xác thực...'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 1),
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.fromLTRB(16, 0, 16, 120),
+        ),
+      );
+
+      // Chuyển trang sang OTP
+      Navigator.pushNamed(context, AppRouter.otp, arguments: phoneNumber);
+    } else {
+      // TRƯỜNG HỢP 2: SĐT CHƯA TỒN TẠI
+      errorText = 'Số điện thoại này chưa được đăng ký!';
+      notifyListeners();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng sang trang đăng ký để tạo tài khoản'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.fromLTRB(16, 0, 16, 120),
+        ),
+      );
+    }
   }
 
   @override

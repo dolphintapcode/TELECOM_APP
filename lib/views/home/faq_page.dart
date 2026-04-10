@@ -25,7 +25,7 @@ class FaqPage extends StatelessWidget {
       body: ListView.separated(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         itemCount: MenuContent.faqs.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
+        separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (context, index) {
           final item = MenuContent.faqs[index];
           return Theme(
